@@ -2,13 +2,33 @@ from collections.abc import Iterable, Callable, Sequence
 from typing import List
 
 
+class Formatter:
+    __init__ = None
+
+    @staticmethod
+    def simple_left(text, size: int, filler: str = " "):
+        text = str(text)
+        if len(text) >= size:
+            return text[:size]
+        else:
+            return f"{text}{filler*(size-len(text))}"
+
+    @staticmethod
+    def simple_right(text, size: int, filler: str = " "):
+        text = str(text)
+        if len(text) >= size:
+            return text[:size]
+        else:
+            return f"{filler*(size-len(text))}{text}"
+
+
 class MenuOption:
     __match_args__ = ("name", "triggers", "description", "body_func")
 
     def __init__(
             self,
             name: str,
-            triggers: Sequence[str],
+            triggers: Sequence[str],  # todo: allow regex
             description: str = "",
             alt_func: Callable | None = None,
     ):
@@ -28,7 +48,7 @@ class MenuOption:
 
     # region Alterable
     def body_func(self):
-        print(f"hello from MenuOption {self.name}!\n{self.description}")
+        print(f"hello from MenuOption {self.name}!\n{self.description}\n\n")
     # endregion
 
 
@@ -52,7 +72,7 @@ class Menu:
             self.notification_invalid = alt_notification
 
     def register(self, option: MenuOption):
-        o2 = option.clone()
+        o2 = option.clone(False)
         o2.triggers.append(str(len(self.options)))
         self.options.append(o2)
 
@@ -62,9 +82,14 @@ class Menu:
 
     # region Alterable
     def get_input(self, tab: int = 2):
+        ll = len(str(len(self.options)))
+        longest = max([len(o.name) for o in self.options])
         text = "Choose option from the list below:\n"
         for i, option in enumerate(self.options):
-            text += f"{tab * ' '}{i}. {option.name}{f' | {option.description}' if option.description else ''}\n"
+            text += (
+                f"{tab * ' '}{Formatter.simple_right(i, ll)}. {Formatter.simple_left(option.name, longest)}"
+                f"{f' | {option.description}' if option.description else ''}\n"
+            )
         text += "Enter number or option's name: "
         return input(text)
 
@@ -77,17 +102,22 @@ class Menu:
             break_after_valid: bool = True,
             make_lower: bool = True,
             **option_parameters
-    ):  # changeable
+    ):
         while True:
             choice = self.get_input(tab)
+            print()
             if make_lower:
                 choice = choice.lower()
+            found = False
             for option in self.options:
                 if choice in option.triggers:
                     option.body_func(**option_parameters)
-                    if break_after_valid:
-                        return
-            self.notification_invalid(choice)
+                    found = True
+            if found:
+                if break_after_valid:
+                    return
+            else:
+                self.notification_invalid(choice)
     # endregion
 
 
