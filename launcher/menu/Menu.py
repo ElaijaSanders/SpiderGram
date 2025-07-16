@@ -89,3 +89,6 @@ class Menu:
                         return
             self.notification_invalid(choice)
     # endregion
+
+
+__all__ = ["MenuOption", "Menu"]
