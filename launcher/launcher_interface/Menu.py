@@ -30,7 +30,7 @@ class MenuOption:
             self,
             name: str,
             description: str = "",
-            triggers: Sequence[str] = (),  # todo: allow regex
+            triggers: Sequence[str] = (),
             pattern: str | Pattern | None = None,
             alt_func: Callable | None = None,
     ):
